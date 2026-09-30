@@ -2,14 +2,13 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --foreground: #0a0f1e;
+  --cobalt: #2456f6;
+  --cobalt-strong: #1a3fc4;
+  --cobalt-soft: #eef2ff;
+  --surface: #f6f8fc;
+  --border: #e2e7f0;
+  --muted: #5b6478;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +18,59 @@
   }
 }
 
+/* TixlogicSearch theme modes (user-selectable in Settings) */
+html.theme-light {
+  --background: #ffffff;
+  --foreground: #0a0f1e;
+  --surface: #f6f8fc;
+  --border: #e2e7f0;
+  --muted: #5b6478;
+  --cobalt-soft: #eef2ff;
+  color-scheme: light;
+}
+html.theme-dark {
+  --background: #0b0d12;
+  --foreground: #e8ecf4;
+  --surface: #12151d;
+  --border: #232837;
+  --muted: #9aa3b5;
+  --cobalt: #4d7bff;
+  --cobalt-strong: #6b93ff;
+  --cobalt-soft: #16203a;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-cobalt: var(--cobalt);
+  --color-cobalt-strong: var(--cobalt-strong);
+  --color-cobalt-soft: var(--cobalt-soft);
+  --color-surface: var(--surface);
+  --color-line: var(--border);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+::selection {
+  background: var(--cobalt);
+  color: #fff;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* subtle scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
