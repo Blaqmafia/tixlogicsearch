@@ -3,11 +3,11 @@
  *
  * IMPORTANT / honest architecture note:
  * Browser IndexedDB is origin-specific and CANNOT be read by the server.
- * Therefore the remote /api/v1/search endpoint searches exactly what the
- * caller submits in `corpus.documents` — it never fabricates results and
- * never claims to see the user's local index. Clients that want their local
- * corpus searched remotely must include it in the request (or use the
- * client-side `localSearch.search()` inside the browser instead).
+ * The remote /api/v1/search endpoint therefore searches either:
+ *   1. exactly what the caller submits in `corpus.documents`, or
+ *   2. a live, securely-fetched web crawl (`fetchLive: true`), which retrieves
+ *      real pages from the public internet with SSRF-hardened fetching.
+ * It never fabricates results and never claims to see the user's local index.
  */
 
 import { InvertedIndex } from "@/lib/indexing/inverted-index";
@@ -101,4 +101,85 @@ export function serverSearch(
   options: EngineOptions = {}
 ): SearchResponse {
   return serverSearchBundle(query, corpus, options).response;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Live web search (server-side global retrieval)                             */
+/* -------------------------------------------------------------------------- */
+
+import { crawlSite } from "@/lib/crawler/fetcher";
+import type { ExtractedContent } from "@/types";
+
+export interface LiveWebSearchResult extends ServerSearchResultBundle {
+  pagesVisited: number;
+  pagesFailed: number;
+  robotsNoticed: boolean;
+  errors: string[];
+  tookMsTotal: number;
+}
+
+/**
+ * Retrieve real, publicly accessible web pages for a query and rank them with
+ * the same custom inverted-index + BM25/TF-IDF engine. This is what powers
+ * "global" search from the UI — results are actual retrieved documents with
+ * their original URLs, never fabricated listings.
+ */
+export async function liveWebSearch(
+  query: string,
+  opts: { site?: string; maxPages?: number; depth?: number; timeoutMs?: number } & EngineOptions = {}
+): Promise<LiveWebSearchResult | { error: string }> {
+  const startedAt = Date.now();
+  let rootUrl: string;
+  if (opts.site && opts.site.trim()) {
+    const s = opts.site.trim();
+    rootUrl = /^https?:\/\//i.test(s) ? s : `https://${s.replace(/^\/+/, "")}`;
+  } else {
+    // No explicit site: use well-known public entry points so we can reach
+    // content "globally" without pretending to be a full-web index.
+    rootUrl = "https://en.wikipedia.org/wiki/Special:Search?search=" + encodeURIComponent(query);
+  }
+
+  const collected: ExtractedContent[] = [];
+  const crawl = await crawlSite(rootUrl, {
+    maxPages: opts.maxPages ?? 8,
+    depth: opts.depth ?? (opts.site ? 1 : 0),
+    sameDomainOnly: true,
+    timeoutMs: opts.timeoutMs ?? 15000,
+    callbacks: {
+      onPageStored: async (extracted) => {
+        collected.push(extracted);
+        return "stored";
+      },
+    },
+  });
+
+  if (collected.length === 0) {
+    return {
+      error:
+        crawl.errors[0] ??
+        "No accessible pages could be retrieved for this search. The site may block crawlers (robots.txt), be unreachable, or the request timed out.",
+    };
+  }
+
+  const corpus: CorpusDocument[] = collected.map((e) => ({
+    url: e.canonicalUrl || e.url,
+    canonicalUrl: e.canonicalUrl,
+    title: e.title,
+    description: e.description,
+    content: e.content,
+    headings: e.headings,
+    keywords: [],
+    language: e.language,
+    source: safeHost(e.finalUrl || e.url),
+  }));
+
+  const bundle = serverSearchBundle(query, corpus, opts);
+  return {
+    ...bundle,
+    pagesVisited: crawl.pagesVisited,
+    pagesFailed: crawl.pagesFailed,
+    robotsNoticed: crawl.robotsNoticed,
+    errors: crawl.errors,
+    tookMsTotal: Date.now() - startedAt,
+  };
 }
