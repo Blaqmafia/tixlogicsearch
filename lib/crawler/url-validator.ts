@@ -23,9 +23,9 @@ const PRIVATE_V4_RANGES: Array<{ mask: number[]; bits: number }> = [
 function ipToBytes(ip: string): number[] | null {
   const parts = ip.split(".");
   if (parts.length !== 4) return null;
-  const bytes = parts.map((p) => parseInt(p, 10));
-  if (bytes.some((b) => !Number.isFinite(b) || b < 0 || b > 255 || String(b) !== p)) return null;
-  return bytes;
+  const bytes = parts.map((p) => ({ raw: p, n: parseInt(p, 10) }));
+  if (bytes.some(({ raw, n }) => !Number.isFinite(n) || n < 0 || n > 255 || String(n) !== raw)) return null;
+  return bytes.map(({ n }) => n);
 }
 
 export function isPrivateIPv4(ip: string): boolean {

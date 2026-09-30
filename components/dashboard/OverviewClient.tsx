@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Database, Search, History as HistoryIcon, Activity, HardDrive, FileText, Globe, Plug, Zap } from "lucide";
+import { Database, Search, History as HistoryIcon, Activity, HardDrive, FileText, Globe, Plug, Zap } from "lucide-react";
 import { localSearch } from "@/services/local-search-service";
 import { getStorageStatus } from "@/lib/storage/idb";
 import { useAppState } from "@/components/AppProviders";
 import { Card, CardTitle, Stat, Spinner, Button, Badge } from "@/components/ui";
-import type { StorageStatus } from "@/types";
+import type { StorageStatus } from "@/lib/storage/idb";
 
 interface Stats {
   documents: number;

@@ -95,7 +95,7 @@ const RESULT_COLUMNS: Array<{ key: keyof SearchResult | "pagination.page" | "pag
 
 function cell(result: SearchResult, key: string): string {
   if (key.startsWith("pagination.")) return "";
-  const v = (result as Record<string, unknown>)[key];
+  const v = (result as unknown as Record<string, unknown>)[key];
   if (Array.isArray(v)) return v.join("|");
   if (v === undefined || v === null) return "";
   return String(v);

@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Search, Sparkles, X, History as HistoryIcon, Bookmark, ChevronLeft,
   ChevronRight, ExternalLink, Clock, Ban, FileText, Database, ListTree, Zap,
-} from "lucide";
+} from "lucide-react";
 import { localSearch } from "@/services/local-search-service";
 import { webRetrieve } from "@/services/client-services";
 import { useAppState } from "@/components/AppProviders";

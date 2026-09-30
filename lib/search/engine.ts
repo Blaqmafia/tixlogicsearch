@@ -134,9 +134,9 @@ export class SearchEngine {
 
     // Sorting
     if (options.sort === "date") {
-      scored.sort((a, b) => Date.parse(this.docs.get(b.id)?.indexedAt || 0) - Date.parse(this.docs.get(a.id)?.indexedAt || 0));
+      scored.sort((a, b) => Date.parse(this.docs.get(b.id)?.indexedAt ?? "") - Date.parse(this.docs.get(a.id)?.indexedAt ?? ""));
     } else if (options.sort === "title") {
-      scored.sort((a, b) => (this.docs.get(a.id)?.title || "").localeCompare(this.docs.get(b.id)?.title || ""));
+      scored.sort((a, b) => (this.docs.get(a.id)?.title ?? "").localeCompare(this.docs.get(b.id)?.title ?? ""));
     }
 
     const limit = Math.min(Math.max(1, options.limit ?? DEFAULT_LIMIT), MAX_LIMIT);

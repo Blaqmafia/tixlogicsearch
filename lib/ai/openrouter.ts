@@ -153,7 +153,13 @@ async function chatCompletionOnce(cfg: AiConfig, prompt: string): Promise<{ ok: 
     };
     const content = json.choices?.[0]?.message?.content;
     if (!content) return { ok: false, error: "Provider returned an empty completion" };
-    return { ok: true, content, usage: { promptTokens: json.usage?.prompt_tokens, completionTokens: json.usage?.completion_tokens } };
+    return {
+      ok: true,
+      content,
+      usage: json.usage
+        ? { promptTokens: json.usage.prompt_tokens ?? 0, completionTokens: json.usage.completion_tokens ?? 0 }
+        : undefined,
+    };
   } catch (e) {
     const msg = e instanceof Error ? (e.name === "AbortError" ? `Request timed out after ${cfg.timeoutMs}ms` : e.message) : String(e);
     return { ok: false, error: msg };

@@ -248,6 +248,7 @@ export const settingsStore = {
   all: () => getAll<SettingsEntry>(STORES.settings),
   get: (key: string) => getById<SettingsEntry>(STORES.settings, key),
   put: (s: SettingsEntry) => put(STORES.settings, s),
+  remove: (key: string) => remove(STORES.settings, key),
   clear: () => clearStore(STORES.settings),
 };
 
@@ -262,6 +263,7 @@ export const crawlStore = {
   all: () => getAll<CrawlJobRecord>(STORES.crawlJobs),
   get: (id: string) => getById<CrawlJobRecord>(STORES.crawlJobs, id),
   put: (j: CrawlJobRecord) => put(STORES.crawlJobs, j),
+  remove: (id: string) => remove(STORES.crawlJobs, id),
   clear: () => clearStore(STORES.crawlJobs),
 };
 
@@ -273,10 +275,16 @@ export interface StorageStatus {
   usageBytes?: number;
   quotaBytes?: number;
   error?: string;
+  /** Fields used by the dashboard UI (kept in sync with the fields above). */
+  database: string;
+  supported: boolean;
+  usage?: number;
+  quota?: number;
 }
 
 export async function getStorageStatus(): Promise<StorageStatus> {
-  if (!hasIDB()) return { available: false, persisted: false, error: "IndexedDB not supported in this environment" };
+  const base = { database: DB_NAME };
+  if (!hasIDB()) return { ...base, available: false, persisted: false, supported: false, error: "IndexedDB not supported in this environment" };
   try {
     await openDatabase();
     let persisted = false;
@@ -290,9 +298,9 @@ export async function getStorageStatus(): Promise<StorageStatus> {
       usageBytes = est.usage;
       quotaBytes = est.quota;
     }
-    return { available: true, persisted, usageBytes, quotaBytes };
+    return { ...base, available: true, supported: true, persisted, usageBytes, quotaBytes, usage: usageBytes, quota: quotaBytes };
   } catch (e) {
-    return { available: false, persisted: false, error: e instanceof Error ? e.message : String(e) };
+    return { ...base, available: false, supported: true, persisted: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
