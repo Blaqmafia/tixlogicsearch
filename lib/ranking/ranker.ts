@@ -20,7 +20,7 @@ export interface RankingInput {
   terms: string[]; // query terms for posting lookup (already normalized/stemmed)
   phrases: string[]; // exact phrases (lowercased, unstemmed)
   algorithm?: RankingAlgorithm;
-  weights?: Partial<RankWeights>;
+  weights?: RankWeights | Partial<RankWeights>;
   /** docId -> fields used for field-level boosting */
   fields: Record<string, { title: string; headings: string[]; keywords: string[]; indexedAt: string }>;
   /** restrict candidate ids (e.g. after domain filter / AND pass) */

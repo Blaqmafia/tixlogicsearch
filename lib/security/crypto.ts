@@ -70,8 +70,8 @@ export async function verifyPassword(password: string, stored: string): Promise<
     if (!Number.isFinite(iterations) || iterations <= 0) return false;
     const crypto = getCrypto();
     const salt = b64urlToBuf(saltB64);
-    const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
-    const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, key, 256);
+    const key = await crypto.subtle.importKey("raw", enc.encode(password) as unknown as BufferSource, "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: salt as unknown as BufferSource, iterations, hash: "SHA-256" }, key, 256);
     const candidate = bufToB64url(bits);
     return timingSafeEqual(candidate, hashB64);
   } catch {

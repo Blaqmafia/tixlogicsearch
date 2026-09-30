@@ -14,6 +14,7 @@ import { canonicalizeUrl } from "@/lib/crawler/url-validator";
 import { DEFAULT_STOP_WORDS, tokenize } from "@/lib/search/tokenizer";
 import {
   cacheStore,
+  crawlStore,
   docStore,
   historyStore,
   indexStore,
@@ -79,13 +80,13 @@ class LocalSearchService {
       // If persisted stats are missing lengths or index is empty while docs exist, rebuild.
       const needsRebuild = documents.length > 0 && (entries.length === 0 || !(await this.metaConsistent(documents.length)));
       if (needsRebuild) {
-        await this.rebuildIndexInner(documents, map);
+        // Fresh empty index; the per-document loop below populates postings and lengths.
+        idx.loadEntries([], []);
       } else {
-        // recompute lengths for ranking accuracy
+        // (re)compute postings + document lengths for ranking accuracy
         for (const d of documents) {
           idx.addDocument(d.id, InvertedIndex.documentText(d), this.settings!.stemming);
         }
-        // that call rebuilt postings in memory too — persist nothing extra
       }
       this.index = idx;
       this.docs = map;
@@ -466,6 +467,49 @@ class LocalSearchService {
   async getLogs(limit = 100): Promise<Array<{ id: string; event: string; timestamp: string; details: string }>> {
     const all = await logStore.all();
     return all.sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp)).slice(0, limit);
+  }
+
+  /* ------------------------- dashboard statistics ------------------------ */
+
+  /** Aggregated, real counts from local IndexedDB stores (no fabricated data). */
+  async getStats(): Promise<{
+    documents: number;
+    terms: number;
+    searches: number;
+    logs: number;
+    jobs: number;
+    topTerms: Array<{ term: string; docs: number }>;
+    domains: Array<{ domain: string; count: number }>;
+  }> {
+    await this.init();
+    const entries = await indexStore.all();
+    const topTerms = entries
+      .map((e) => ({ term: e.term, docs: e.documentIds.length }))
+      .sort((a, b) => b.docs - a.docs || a.term.localeCompare(b.term))
+      .slice(0, 12);
+    const domainCounts = new Map<string, number>();
+    for (const doc of this.docs.values()) {
+      try {
+        const host = new URL(doc.url).hostname.toLowerCase().replace(/^www\./, "");
+        domainCounts.set(host, (domainCounts.get(host) ?? 0) + 1);
+      } catch {
+        /* skip docs with unparseable URLs */
+      }
+    }
+    const domains = [...domainCounts.entries()]
+      .map(([domain, count]) => ({ domain, count }))
+      .sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain))
+      .slice(0, 8);
+    const [history, logs, jobs] = await Promise.all([historyStore.all(), logStore.all(), crawlStore.all()]);
+    return {
+      documents: this.index!.documentCount,
+      terms: this.index!.termCount,
+      searches: history.length,
+      logs: logs.length,
+      jobs: jobs.length,
+      topTerms,
+      domains,
+    };
   }
 
   storeNames(): string[] {

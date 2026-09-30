@@ -1,2 +1,7 @@
-# Backup files
-*.bak
+# Dependencies
+node_modules/
+
+# Build artifacts and caches
+dist/
+build/
+tsconfig.tsbuildinfo
