@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Search, Sparkles, Globe, Database, Gauge, Plug } from "lucide";
+import { Search, Sparkles, Globe, Database, Gauge, Plug } from "lucide-react";
 import { Card } from "@/components/ui";
 
 export function HomeClient() {

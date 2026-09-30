@@ -284,9 +284,4 @@ class WebRetrieveService {
 
 export const webRetrieve = new WebRetrieveService();
 
-// Extend the crawl page result shape used above without touching shared types.
-declare module "@/types" {
-  interface CrawlPageResult {
-    documentPayload?: unknown;
-  }
-}
+// CrawlPageResult.documentPayload is declared in @/types; nothing to augment here.

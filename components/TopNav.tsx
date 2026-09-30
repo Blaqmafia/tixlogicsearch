@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { Menu, X, Settings as SettingsIcon, Sun, Moon } from "lucide";
+import { Menu, X, Settings as SettingsIcon, Sun, Moon } from "lucide-react";
 import { useAppState } from "@/components/AppProviders";
 
 const LINKS = [

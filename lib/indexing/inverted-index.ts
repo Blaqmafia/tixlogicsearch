@@ -116,7 +116,7 @@ export class InvertedIndex {
       const p = this.postings.get(t);
       if (!p) return [];
       const set = new Set(p.documentIds);
-      acc = acc === null ? set : new Set([...acc].filter((x) => set.has(x)));
+      acc = acc === null ? set : new Set<string>([...acc].filter((x) => set.has(x)));
       if (acc.size === 0) return [];
     }
     return acc ? [...acc] : [];
