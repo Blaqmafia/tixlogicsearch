@@ -353,7 +353,20 @@ class LocalSearchService {
     const all = await cacheStore.all();
     const hit = all.find((c) => c.queryHash === hash && Date.parse(c.expiresAt) > Date.now());
     if (!hit) return null;
-    return { ...(hit as unknown as { results: SearchResponse }), scope: "local-index" } as SearchResponse;
+    // putCached stores the full response fields alongside cache metadata, so
+    // read them directly from the entry (previous version double-wrapped).
+    const r = hit as unknown as Record<string, unknown>;
+    if (!r.results || !r.pagination) return null;
+    return {
+      query: String(r.query),
+      normalizedQuery: String(r.normalizedQuery ?? ""),
+      tokens: (r.tokens as string[]) ?? [],
+      results: r.results as SearchResponse["results"],
+      pagination: r.pagination as SearchResponse["pagination"],
+      tookMs: Number(r.tookMs ?? 0),
+      indexSize: Number(r.indexSize ?? 0),
+      scope: "local-index",
+    };
   }
 
   private async putCached(keyJson: string, response: SearchResponse): Promise<void> {
