@@ -179,7 +179,7 @@ export interface SearchResponse {
   pagination: SearchPagination;
   tookMs: number;
   indexSize: number;
-  scope: "local-index";
+  scope: "local-index" | "live-web" | "submitted-corpus";
 }
 
 /* ----------------------------- crawler ------------------------------ */
