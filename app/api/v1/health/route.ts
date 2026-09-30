@@ -13,9 +13,8 @@ import type { HealthResponse } from "@/types";
 
 export const dynamic = "force-dynamic";
 
-export function OPTIONS() {
-  // Placeholder replaced below; see named export requirement.
-  return new Response(null, { status: 204 });
+export function OPTIONS(req: NextRequest) {
+  return optionsResponse(req);
 }
 
 export function GET(req: NextRequest) {
@@ -41,9 +40,4 @@ export function GET(req: NextRequest) {
     },
   };
   return ok(ctx, body);
-}
-
-// Re-export proper OPTIONS with CORS from helpers (kept here to satisfy route typing).
-export async function OPTIONS_cors(req: NextRequest) {
-  return optionsResponse(req);
 }
