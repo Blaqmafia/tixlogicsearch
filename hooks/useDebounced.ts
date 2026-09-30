@@ -1,0 +1,12 @@
+"use client";
+import { useEffect, useState } from "react";
+
+/** Debounce a changing value (used for live search suggestions). */
+export function useDebouncedValue<T>(value: T, delayMs = 250): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(t);
+  }, [value, delayMs]);
+  return debounced;
+}
